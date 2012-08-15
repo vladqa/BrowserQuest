@@ -772,8 +772,9 @@ function(InfoManager, BubbleManager, Renderer, Map, Animation, Sprite, AnimatedT
                 // Always accept name received from the server which will
                 // sanitize and shorten names exceeding the allowed length.
                 self.player.name = name;
-                console.log("SWITCH WEAPON ", wpn);
-                self.player.switchWeapon(weapon);
+                var weapon_sprite = Types.getKindAsString(wpn);
+
+                self.player.switchWeapon(weapon_sprite);
                 self.player.setGridPosition(x, y);
                 self.player.setMaxHitPoints(hp);
             

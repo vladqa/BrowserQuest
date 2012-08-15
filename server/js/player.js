@@ -61,7 +61,7 @@ module.exports = Player = Character.extend({
                 self.readProps(function(err, json_string) {
                     if(err) {
                         self.updatePosition();
-                        self.equipWeapon(message[3]);
+                        self.equipWeapon(61);
                     } else {
                         var props = JSON.parse(json_string);
                         self.x = props.x;
