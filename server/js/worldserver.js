@@ -110,6 +110,9 @@ module.exports = World = cls.Class.extend({
     
             player.onExit(function() {
                 log.info(player.name + " has left the game.");
+
+                player.saveProps();
+
                 self.removePlayer(player);
                 self.decrementPlayerCount();
                 

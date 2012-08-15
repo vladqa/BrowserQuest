@@ -15,7 +15,7 @@ module.exports = Checkpoint = cls.Class.extend({
     
     getRandomPosition: function() {
         var pos = {};
-        
+
         pos.x = this.x + Utils.randomInt(0, this.width - 1);
         pos.y = this.y + Utils.randomInt(0, this.height - 1);
         return pos;

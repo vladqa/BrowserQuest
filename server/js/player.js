@@ -6,6 +6,7 @@ var cls = require("./lib/class"),
     Properties = require("./properties"),
     Formulas = require("./formulas"),
     check = require("./format").check,
+    fs    = require('fs'),
     Types = require("../../shared/js/gametypes");
 
 module.exports = Player = Character.extend({
@@ -23,11 +24,14 @@ module.exports = Player = Character.extend({
         this.lastCheckpoint = null;
         this.formatChecker = new FormatChecker();
         this.disconnectTimeout = null;
+
+        this.posFilePrefix = 'server/db/pos_';
         
         this.connection.listen(function(message) {
             var action = parseInt(message[0]);
             
             log.debug("Received: "+message);
+
             if(!check(message)) {
                 self.connection.close("Invalid "+Types.getMessageTypeAsString(action)+" message format: "+message);
                 return;
@@ -37,6 +41,7 @@ module.exports = Player = Character.extend({
                 self.connection.close("Invalid handshake message: "+message);
                 return;
             }
+
             if(self.hasEnteredGame && !self.isDead && action === Types.Messages.HELLO) { // HELLO can be sent only once
                 self.connection.close("Cannot initiate handshake twice: "+message);
                 return;
@@ -51,28 +56,41 @@ module.exports = Player = Character.extend({
                 // Always ensure that the name is not longer than a maximum length.
                 // (also enforced by the maxlength attribute of the name input element).
                 self.name = (name === "") ? "lorem ipsum" : name.substr(0, 15);
-                
-                self.kind = Types.Entities.WARRIOR;
-                self.equipArmor(message[2]);
-                self.equipWeapon(message[3]);
-                self.orientation = Utils.randomOrientation();
-                self.updateHitPoints();
-                self.updatePosition();
-                
-                self.server.addPlayer(self);
-                self.server.enter_callback(self);
 
-                self.send([Types.Messages.WELCOME, self.id, self.name, self.x, self.y, self.hitPoints]);
-                self.hasEnteredGame = true;
-                self.isDead = false;
+                // READ POSITION FROM FILE
+                self.readProps(function(err, json_string) {
+                    if(err) {
+                        self.updatePosition();
+                        self.equipWeapon(message[3]);
+                    } else {
+                        var props = JSON.parse(json_string);
+                        self.x = props.x;
+                        self.y = props.y;
+                        self.equipWeapon(props.weapon);
+                    }
+
+                    self.kind = Types.Entities.WARRIOR;
+                    self.equipArmor(message[2]);
+
+                    self.orientation = Utils.randomOrientation();
+                    self.updateHitPoints();
+                    self.server.addPlayer(self);
+                    self.server.enter_callback(self);
+                    self.send([Types.Messages.WELCOME, self.id, self.name, self.x, self.y, self.hitPoints, self.weapon]);
+                    self.hasEnteredGame = true;
+                    self.isDead = false;
+                });
             }
+
             else if(action === Types.Messages.WHO) {
                 message.shift();
                 self.server.pushSpawnsToPlayer(self, message);
             }
+
             else if(action === Types.Messages.ZONE) {
                 self.zone_callback();
             }
+
             else if(action === Types.Messages.CHAT) {
                 var msg = Utils.sanitize(message[1]);
                 
@@ -366,7 +384,27 @@ module.exports = Player = Character.extend({
             this.setPosition(pos.x, pos.y);
         }
     },
-    
+
+    saveProps: function() {
+        var filename = this.posFilePrefix + this.name;
+        var tosave = {
+            x:           this.x,
+            y:           this.y,
+            weapon:      this.weapon
+        };
+
+        fs.writeFile(filename, JSON.stringify(tosave) ,function(err) {
+            if(err) {
+                log.debug(this.name + ": failed save props to " + filename);
+            }
+        });
+    },
+
+    readProps: function(callback) {
+        var filename = this.posFilePrefix + this.name;
+        fs.readFile(filename, 'utf8', callback);
+    },
+
     onRequestPosition: function(callback) {
         this.requestpos_callback = callback;
     },

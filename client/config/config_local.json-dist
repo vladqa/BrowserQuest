@@ -1,5 +1,5 @@
 {
-    "host": "Set local dev websocket host here",
+    "host": "quest",
     "port": 8000,
     "dispatcher": false
 }
