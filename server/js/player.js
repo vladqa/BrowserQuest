@@ -10,7 +10,7 @@ var cls = require("./lib/class"),
     Types = require("../../shared/js/gametypes");
 
 module.exports = Player = Character.extend({
-    init: function(connection, worldServer) {
+    init: function(connection, worldServer, storagedb) {
         var self = this;
         
         this.server = worldServer;
@@ -26,7 +26,9 @@ module.exports = Player = Character.extend({
         this.disconnectTimeout = null;
 
         this.posFilePrefix = 'server/db/pos_';
-        
+
+        this.storagedb = storagedb;
+
         this.connection.listen(function(message) {
             var action = parseInt(message[0]);
             
@@ -79,6 +81,11 @@ module.exports = Player = Character.extend({
                     self.send([Types.Messages.WELCOME, self.id, self.name, self.x, self.y, self.hitPoints, self.weapon]);
                     self.hasEnteredGame = true;
                     self.isDead = false;
+
+//                    var saveProps = setTimeout(function run() {
+//                        self.storagedb.saveProps(self);
+//                        saveProps = setTimeout(run, 30000);
+//                    }, 30000);
                 });
             }
 
@@ -398,6 +405,10 @@ module.exports = Player = Character.extend({
                 log.debug(this.name + ": failed save props to " + filename);
             }
         });
+    },
+
+    savePropsDb: function() {
+
     },
 
     readProps: function(callback) {

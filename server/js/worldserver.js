@@ -8,6 +8,7 @@ var cls = require("./lib/class"),
     Map = require('./map'),
     Npc = require('./npc'),
     Player = require('./player'),
+    StorageDB = require('./storagedb'),
     Item = require('./item'),
     MobArea = require('./mobarea'),
     ChestArea = require('./chestarea'),
@@ -48,7 +49,7 @@ module.exports = World = cls.Class.extend({
         this.playerCount = 0;
         
         this.zoneGroupsReady = false;
-        
+
         this.onPlayerConnect(function(player) {
             player.onRequestPosition(function() {
                 if(player.lastCheckpoint) {
@@ -124,6 +125,14 @@ module.exports = World = cls.Class.extend({
             if(self.added_callback) {
                 self.added_callback();
             }
+
+            // Saving settings for each player
+            var saveProps = setTimeout(function run() {
+                self.forEachPlayer(function(player) {
+                    StorageDB.saveProps(player);
+                    saveProps = setTimeout(run, 30000);
+                });
+            }, 30000);
         });
         
         // Called when an entity is attacked by another entity
@@ -207,7 +216,7 @@ module.exports = World = cls.Class.extend({
         
         log.info(""+this.id+" created (capacity: "+this.maxPlayers+" players).");
     },
-    
+
     setUpdatesPerSecond: function(ups) {
         this.ups = ups;
     },
