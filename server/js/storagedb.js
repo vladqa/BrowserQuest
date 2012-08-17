@@ -21,5 +21,18 @@ module.exports = StorageDB = cls.Class.extend({
                 collection.insert(to_insert);
             });
         });
+    },
+
+    getProps: function(player_name, callback) {
+        this.db.collection('users', function(err, collection) {
+            if(!err) {
+                collection.find({name: player_name}).each(function(err, doc) {
+                    if(doc != null) {
+                        callback(err, doc);
+                        return false;
+                    }
+                });
+            }
+        });
     }
 });

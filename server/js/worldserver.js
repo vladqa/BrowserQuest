@@ -21,7 +21,7 @@ var cls = require("./lib/class"),
 // ======= GAME SERVER ========
 
 module.exports = World = cls.Class.extend({
-    init: function(id, maxPlayers, websocketServer) {
+    init: function(id, maxPlayers, websocketServer, storagedb) {
         var self = this;
 
         this.id = id;
@@ -49,6 +49,8 @@ module.exports = World = cls.Class.extend({
         this.playerCount = 0;
         
         this.zoneGroupsReady = false;
+
+        this.storagedb = storagedb;
 
         this.onPlayerConnect(function(player) {
             player.onRequestPosition(function() {
@@ -112,7 +114,7 @@ module.exports = World = cls.Class.extend({
             player.onExit(function() {
                 log.info(player.name + " has left the game.");
 
-                player.saveProps();
+                self.storagedb.saveProps(player);
 
                 self.removePlayer(player);
                 self.decrementPlayerCount();
@@ -129,7 +131,7 @@ module.exports = World = cls.Class.extend({
             // Saving settings for each player
             var saveProps = setTimeout(function run() {
                 self.forEachPlayer(function(player) {
-                    StorageDB.saveProps(player);
+                    self.storagedb.saveProps(player);
                     saveProps = setTimeout(run, 30000);
                 });
             }, 30000);

@@ -46,11 +46,12 @@ function main(config) {
             log.info("Successful connect to mongodb");
 
             log.info("Starting BrowserQuest game server...");
+            var storagedb = new StorageDB(db);
+
             server.onConnect(function(connection) {
                 var world, // the one in which the player will be spawned
                     connect = function() {
                         if(world) {
-                            var storagedb = new StorageDB(db);
                             var player = new Player(connection, world, storagedb);
 
                             world.connect_callback(player);
@@ -88,7 +89,7 @@ function main(config) {
             };
 
             _.each(_.range(config.nb_worlds), function(i) {
-                var world = new WorldServer('world'+ (i+1), config.nb_players_per_world, server);
+                var world = new WorldServer('world'+ (i+1), config.nb_players_per_world, server, storagedb);
                 world.run(config.map_filepath);
                 worlds.push(world);
                 if(metrics) {

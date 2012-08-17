@@ -60,12 +60,11 @@ module.exports = Player = Character.extend({
                 self.name = (name === "") ? "lorem ipsum" : name.substr(0, 15);
 
                 // READ POSITION FROM FILE
-                self.readProps(function(err, json_string) {
+                self.storagedb.getProps(self.name, function(err, props) {
                     if(err) {
                         self.updatePosition();
                         self.equipWeapon(61);
                     } else {
-                        var props = JSON.parse(json_string);
                         self.x = props.x;
                         self.y = props.y;
                         self.equipWeapon(props.weapon);
